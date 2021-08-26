@@ -123,7 +123,7 @@ def main(setup_dict):
             cm = CoherenceModel(
                 model=trainer.model,
                 corpus=trainer.corpus,
-                texts=trainer.get_texts(text_key),
+                texts=trainer.get_attribute_list(text_key),
                 coherence="c_v",
             )
 
