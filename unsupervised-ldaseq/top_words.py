@@ -9,12 +9,19 @@ import json
 def get_args():
     argparser = ap.ArgumentParser()
 
-    argparser.add_argument("n_topics", help="Number of topics to analyze results for", type=int)
+    argparser.add_argument(
+        "n_topics", help="Number of topics to analyze results for", type=int
+    )
     argparser.add_argument("--experiment_config", help="Path to experiment's JSON file")
     argparser.add_argument(
         "--show_plot",
         help="Display a plot of individual topics' coherence scores",
         action="store_true",
+    )
+    argparser.add_argument(
+        "--print_only_topic",
+        help="Print only the keywords for this topic number",
+        type=int,
     )
     argparser.add_argument(
         "--remove_from_label",
@@ -25,10 +32,16 @@ def get_args():
     with open(args.experiment_config, "r") as infile:
         input_dict = json.load(infile)
 
-    return input_dict, args.n_topics, args.show_plot, args.remove_from_label
+    return (
+        input_dict,
+        args.n_topics,
+        args.show_plot,
+        args.remove_from_label,
+        args.print_only_topic,
+    )
 
 
-def main(setup_dict, n_topics, show_plot, remove_from_label):
+def main(setup_dict, n_topics, show_plot, remove_from_label, only_topic):
     experiment_name = setup_dict["name"]
 
     main_path = (
@@ -49,11 +62,19 @@ def main(setup_dict, n_topics, show_plot, remove_from_label):
     individual_coherences = [[0] * (len(info.keys()) - 1) for x in range(n_topics)]
     time_frame_labels = []
 
+    # If a specific topic was specified, alert user about change in behavior
+    if only_topic is not None:
+        print("KEYWORDS FOR TOPIC", only_topic)
+
     # For each topic, print the topic's top words and coherence
     for i in range(len(info.keys()) - 1):
-        print("<details>")
-        print("<summary> Click to expand time frame " + str(i) + " </summary>\n")
-        print("Average coherence for time frame:", info["time_" + str(i)]["coherence"])
+        if only_topic is None:
+            print("<details>")
+            print("<summary> Click to expand time frame " + str(i) + " </summary>\n")
+            print(
+                "Average coherence for time frame:", info["time_" + str(i)]["coherence"]
+            )
+
         cm = CoherenceModel.load(info["time_" + str(i)]["coherence_savepath"])
         topic_coherences = cm.get_coherence_per_topic()
         this_label = info["time_" + str(i)]["start_time"]
@@ -66,12 +87,21 @@ def main(setup_dict, n_topics, show_plot, remove_from_label):
         # Loop through individual topics in this time slice
         j = 0
         for topic in trainer.model.print_topics(time=i, top_terms=10):
+            # If a specific topic was specified, only print that
+            if only_topic is not None:
+                if j == only_topic:
+                    print(topic)
+
+            # Otherwise, print everything in Markdown bullet format
+            else:
+                print("* Topic: " + str(j) + " \n  * Words:", topic)
+                print("  * Per-topic coherence:", topic_coherences[j])
+
             individual_coherences[j][i] = topic_coherences[j]
-            print("* Topic: " + str(j) + " \n  * Words:", topic)
-            print("  * Per-topic coherence:", topic_coherences[j])
             j += 1
 
-        print("</details>\n")
+        if only_topic is None:
+            print("</details>\n")
 
     print("Average coherence:", info["aggregated"]["avg_coherence"])
 
@@ -89,5 +119,5 @@ def main(setup_dict, n_topics, show_plot, remove_from_label):
 
 
 if __name__ == "__main__":
-    d, n, p, r = get_args()
-    main(d, n, p, r)
+    d, n, p, r, o = get_args()
+    main(d, n, p, r, o)
