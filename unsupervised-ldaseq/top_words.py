@@ -1,9 +1,9 @@
+import os
+import json
+import argparse as ap
 from ogm.trainer import TextTrainer
 from gensim.models.coherencemodel import CoherenceModel
 import matplotlib.pyplot as plt
-import argparse as ap
-import os
-import json
 
 
 def get_args():
@@ -24,6 +24,21 @@ def get_args():
         type=int,
     )
     argparser.add_argument(
+        "--plot_keywords_topic",
+        help="Pass an int to show bar plots for keywords in a particular topic",
+        type=int,
+    )
+    argparser.add_argument(
+        "--plot_keywords_frame",
+        help="Pass an int to only show a keyword bar plot for that time frame (int should index an array of time frames)",
+        type=int,
+    )
+    argparser.add_argument(
+        "--bar_color",
+        help="Matplotlib-accepted color for the bar plots of topic keywords",
+        default="#1f77b4",
+    )
+    argparser.add_argument(
         "--remove_from_label",
         nargs="*",
         help="List of strings to remove from x-axis plot labels",
@@ -33,7 +48,6 @@ def get_args():
         input_dict = json.load(infile)
 
     return input_dict, args
-
 
 
 def main(setup_dict, args):
@@ -94,6 +108,24 @@ def main(setup_dict, args):
             else:
                 print("* Topic: " + str(j) + " \n  * Words:", topic)
                 print("  * Per-topic coherence:", topic_coherences[j])
+
+            # If plotting a bar graph of this topic at this time frame
+            # OR plotting a bar graph of this topic at all time frames
+            if (args.plot_keywords_topic == j and args.plot_keywords_frame == i) or (
+                args.plot_keywords_topic == j and args.plot_keywords_frame is None
+            ):
+                x_axis = []
+                y_axis = []
+                for word, weight in topic:
+                    x_axis.append(word)
+                    y_axis.append(weight)
+
+                plt.bar(x_axis, y_axis, color=args.bar_color)
+                plt.xticks(rotation=30)
+                plt.title(
+                    "Topic " + str(j) + " Word Probabilities, Time Frame " + str(i)
+                )
+                plt.show()
 
             individual_coherences[j][i] = topic_coherences[j]
             j += 1
