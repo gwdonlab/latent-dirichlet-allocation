@@ -32,16 +32,14 @@ def get_args():
     with open(args.experiment_config, "r") as infile:
         input_dict = json.load(infile)
 
-    return (
-        input_dict,
-        args.n_topics,
-        args.show_plot,
-        args.remove_from_label,
-        args.print_only_topic,
-    )
+    return input_dict, args
 
 
-def main(setup_dict, n_topics, show_plot, remove_from_label, only_topic):
+
+def main(setup_dict, args):
+    n_topics = args.n_topics
+    remove_from_label = args.remove_from_label
+    only_topic = args.print_only_topic
     experiment_name = setup_dict["name"]
 
     main_path = (
@@ -105,7 +103,7 @@ def main(setup_dict, n_topics, show_plot, remove_from_label, only_topic):
 
     print("Average coherence:", info["aggregated"]["avg_coherence"])
 
-    if show_plot:
+    if args.show_plot:
         for i in range(n_topics):
             plt.plot(
                 time_frame_labels, individual_coherences[i], label="Topic " + str(i)
@@ -119,5 +117,5 @@ def main(setup_dict, n_topics, show_plot, remove_from_label, only_topic):
 
 
 if __name__ == "__main__":
-    d, n, p, r, o = get_args()
-    main(d, n, p, r, o)
+    in_dict, args = get_args()
+    main(in_dict, args)
