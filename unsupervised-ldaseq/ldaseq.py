@@ -26,9 +26,7 @@ def main(setup_dict):
 
     # Look for input file at path and DATA_DIR if it's not there
     if not os.path.isfile(setup_dict["data_path"]):
-        setup_dict["data_path"] = (
-            os.getenv("DATA_DIR") + "/" + setup_dict["data_path"]
-        )
+        setup_dict["data_path"] = os.getenv("DATA_DIR") + "/" + setup_dict["data_path"]
 
     # Read in data and run the ogm preprocessing on it
     preprocessed_data = text_data_preprocess(setup_dict, output=False)
@@ -47,13 +45,35 @@ def main(setup_dict):
     time_to_begin = datetime.datetime.strptime(
         setup_dict["time_filter"]["start"], setup_dict["time_filter"]["arg_format"]
     )
-    buckets, quants = trainer.plot_data_quantities(
-        key=setup_dict["time_filter"]["time_key"],
-        data_format=setup_dict["time_filter"]["data_format"],
-        days_interval=setup_dict["days_in_interval"],
-        start_date=time_to_begin.strftime(setup_dict["time_filter"]["data_format"]),
-        show_plot=setup_dict["show_plot"],
-    )
+
+    if "end" in setup_dict["time_filter"]:
+        time_to_end = datetime.datetime.strptime(
+            setup_dict["time_filter"]["end"], setup_dict["time_filter"]["arg_format"]
+        )
+    else:
+        time_to_end = datetime.datetime.now()
+
+    if "data_format" in setup_dict["time_filter"]:
+        buckets, quants = trainer.plot_data_quantities(
+            key=setup_dict["time_filter"]["time_key"],
+            data_format=setup_dict["time_filter"]["data_format"],
+            days_interval=setup_dict["days_in_interval"],
+            start_date=time_to_begin.strftime(setup_dict["time_filter"]["data_format"]),
+            end_date=time_to_end.strftime(setup_dict["time_filter"]["data_format"]),
+            show_plot=setup_dict["show_plot"],
+        )
+    else:
+        trainer.add_datetime_attribute(
+            setup_dict["time_filter"]["time_key"], "__added_datetime"
+        )
+        buckets, quants = trainer.plot_data_quantities(
+            key=setup_dict["time_filter"]["time_key"],
+            days_interval=setup_dict["days_in_interval"],
+            start_date=time_to_begin.strftime(setup_dict["time_filter"]["arg_format"]),
+            end_date=time_to_end.strftime(setup_dict["time_filter"]["arg_format"]),
+            data_format=setup_dict["time_filter"]["arg_format"],
+            show_plot=setup_dict["show_plot"],
+        )
 
     # Sum of bucket quantities had better match the size of the dataset
     assert sum(quants) == len(trainer.data)

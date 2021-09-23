@@ -43,7 +43,7 @@ Run `ldaseq.py` with a path to a `.json` file structured as follows. All entries
         "arg_format": "Python datetime formatting code for entries in this file",
         "start": "timestamp formatted according to arg_format",
         "end": "timestamp formatted according to arg_format",
-        "data_format": "Python datetime formatting code for entries in the data",
+        "data_format": "Python datetime formatting code for entries in the data (optional)",
         "time_key" : "heading in data table where timestamps appear"
     },
     "replace_before_stemming" : {
