@@ -9,8 +9,8 @@ from matplotlib.ticker import MaxNLocator, FormatStrFormatter
 argparser = ap.ArgumentParser()
 argparser.add_argument("plot_title", help="Title to appear on plot")
 argparser.add_argument(
-    "experiment_names",
-    help="1 or more experiment names corresponding to those specified in experiment JSON files",
+    "experiment_configs",
+    help="1 or more paths to experiment config JSON files",
     nargs="+",
 )
 argparser.add_argument(
@@ -40,7 +40,7 @@ argparser.add_argument(
 argparser.add_argument(
     "--legend",
     required=False,
-    help="If set, adds a plot legend",
+    help="If set, adds a plot legend; the keys in this legend will be experiment names unless 'plot_name' is in the config file",
     dest="add_legend",
     action="store_true",
 )
@@ -62,7 +62,11 @@ if args.plot_3d:
 
     # A 2D array of all the coherence scores for the experiments
     all_coherences = []
-    for experiment_name in args.experiment_names:
+    for experiment_path in args.experiment_configs:
+        # Load experiment config file
+        with open(experiment_path, "r") as infile:
+            expt_config = json.load(infile)
+        experiment_name = expt_config["name"]
 
         # Read in all metadata files
         models_parent_dir = os.getenv("MODEL_DIR") + "/" + experiment_name
@@ -121,7 +125,11 @@ if args.plot_3d:
 else:
     ax = plt.figure().gca()
 
-    for experiment_name in args.experiment_names:
+    for experiment_path in args.experiment_configs:
+        # Load experiment config file
+        with open(experiment_path, "r") as infile:
+            expt_config = json.load(infile)
+        experiment_name = expt_config["name"]
 
         # Read in all metadata files
         models_parent_dir = os.getenv("MODEL_DIR") + "/" + experiment_name
@@ -153,9 +161,18 @@ else:
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
 
         if args.no_errorbars:
-            ax.plot(x_topics, y_coherence, label=experiment_name)
+            if "plot_name" in expt_config:
+                ax.plot(x_topics, y_coherence, label=expt_config["plot_name"])
+            else:
+                ax.plot(x_topics, y_coherence, label=experiment_name)
+
         else:
-            ax.errorbar(x_topics, y_coherence, yerr=y_err, label=experiment_name)
+            if "plot_name" in expt_config:
+                ax.errorbar(
+                    x_topics, y_coherence, yerr=y_err, label=expt_config["plot_name"]
+                )
+            else:
+                ax.errorbar(x_topics, y_coherence, yerr=y_err, label=experiment_name)
 
     if args.plot_20news:
         with open(

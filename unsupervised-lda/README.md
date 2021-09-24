@@ -66,7 +66,8 @@ Run `lda.py` with a path to a `.json` file structured as follows. All entries af
         "strings",
         "to",
         "remove"
-    ]
+    ],
+    "plot_name": "human-readable experiment name to put in a plot legend"
 }
 ```
 
