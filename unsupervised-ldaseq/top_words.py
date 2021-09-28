@@ -4,6 +4,7 @@ import argparse as ap
 from ogm.trainer import TextTrainer
 from gensim.models.coherencemodel import CoherenceModel
 import matplotlib.pyplot as plt
+from labellines import labelLines
 
 
 def get_args():
@@ -49,6 +50,11 @@ def get_args():
         "--lock_yaxis",
         help="Set this flag to force the y-axis to be [0, 1]",
         action="store_true",
+    )
+    argparser.add_argument(
+        "--label_lines",
+        action="store_true",
+        help="Set this flag to put labels directly on the lines instead of a plot legend. This behavior is automatic for n_topics > 10",
     )
     argparser.add_argument(
         "--remove_from_label",
@@ -148,18 +154,22 @@ def main(setup_dict, args):
     print("Average coherence:", info["aggregated"]["avg_coherence"])
 
     if args.show_plot:
+        ticks = [i for i in range(len(time_frame_labels))]
         for i in range(n_topics):
-            plt.plot(
-                time_frame_labels, individual_coherences[i], label="Topic " + str(i)
-            )
-        plt.legend()
+            plt.plot(ticks, individual_coherences[i], label="Topic " + str(i))
+
         plt.title(args.plot_title)
         plt.xlabel("Start of time frame")
         plt.ylabel("Coherence score ($C_v$)")
-        plt.xticks(rotation="vertical")
+        plt.xticks(rotation="vertical", labels=time_frame_labels, ticks=ticks)
 
         if args.lock_yaxis:
             plt.ylim(ymax=1, ymin=0)
+
+        if args.label_lines or n_topics > 10:
+            labelLines(plt.gca().get_lines())
+        else:
+            plt.legend()
 
         plt.show()
 
