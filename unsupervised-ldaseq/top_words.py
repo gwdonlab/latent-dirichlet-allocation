@@ -12,7 +12,9 @@ def get_args():
     argparser.add_argument(
         "n_topics", help="Number of topics to analyze results for", type=int
     )
-    argparser.add_argument("--experiment_config", help="Path to experiment's JSON file")
+    argparser.add_argument(
+        "--experiment_config", help="Path to experiment's JSON file", required=True
+    )
     argparser.add_argument(
         "--show_plot",
         help="Display a plot of individual topics' coherence scores",
@@ -37,6 +39,11 @@ def get_args():
         "--bar_color",
         help="Matplotlib-accepted color for the bar plots of topic keywords",
         default="#1f77b4",
+    )
+    argparser.add_argument(
+        "--plot_title",
+        help="Title for the individual topic coherence plot",
+        default="Coherence Scores of Individual Topics",
     )
     argparser.add_argument(
         "--remove_from_label",
@@ -141,7 +148,7 @@ def main(setup_dict, args):
                 time_frame_labels, individual_coherences[i], label="Topic " + str(i)
             )
         plt.legend()
-        plt.title("Coherence Scores of Individual Topics")
+        plt.title(args.plot_title)
         plt.xlabel("Start of time frame")
         plt.ylabel("Coherence score ($C_v$)")
         plt.xticks(rotation="vertical")
