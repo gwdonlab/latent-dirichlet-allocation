@@ -46,6 +46,11 @@ def get_args():
         default="Coherence Scores of Individual Topics",
     )
     argparser.add_argument(
+        "--lock_yaxis",
+        help="Set this flag to force the y-axis to be [0, 1]",
+        action="store_true",
+    )
+    argparser.add_argument(
         "--remove_from_label",
         nargs="*",
         help="List of strings to remove from x-axis plot labels",
@@ -152,6 +157,10 @@ def main(setup_dict, args):
         plt.xlabel("Start of time frame")
         plt.ylabel("Coherence score ($C_v$)")
         plt.xticks(rotation="vertical")
+
+        if args.lock_yaxis:
+            plt.ylim(ymax=1, ymin=0)
+
         plt.show()
 
 
