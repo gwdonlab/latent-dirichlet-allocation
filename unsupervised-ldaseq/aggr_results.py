@@ -25,6 +25,11 @@ argparser.add_argument(
 argparser.add_argument(
     "--label_rotation", type=int, default=90, help="Degrees to rotate the x-axis labels"
 )
+argparser.add_argument(
+    "--lock_yaxis",
+    help="Set this flag to force the y-axis to be [0, 1]",
+    action="store_true",
+)
 args = argparser.parse_args()
 
 
@@ -71,6 +76,9 @@ ax.set_ylabel("Coherence score ($C_v$)")
 
 if args.add_legend:
     ax.legend()
+
+if args.lock_yaxis:
+    plt.ylim(ymax=1, ymin=0)
 
 ax.set_xlabel("Start of Timeslice")
 ax.set_title(args.plot_title)

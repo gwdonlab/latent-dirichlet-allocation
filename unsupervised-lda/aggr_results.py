@@ -44,6 +44,11 @@ argparser.add_argument(
     dest="add_legend",
     action="store_true",
 )
+argparser.add_argument(
+    "--lock_yaxis",
+    help="Set this flag to force the (2D plot) y-axis to be [0, 1]",
+    action="store_true",
+)
 args = argparser.parse_args()
 
 # Preliminary error-checking
@@ -185,6 +190,9 @@ else:
             ]
 
         ax.plot(x_topics, baseline, "k--", label="20News baseline")
+
+    if args.lock_yaxis:
+        plt.ylim(ymax=1, ymin=0)
 
 if args.plot_3d:
     ax.set_zlabel("Coherence score ($C_v$)")
