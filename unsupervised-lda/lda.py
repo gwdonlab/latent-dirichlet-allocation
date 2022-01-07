@@ -17,9 +17,9 @@ def get_setup_dict():
 
 def main(setup_dict):
 
-    # Path to data file
-    dataf = os.getenv("DATA_DIR")
-    data_file = dataf + "/" + setup_dict["data_path"]
+    # Look for input file at path and DATA_DIR if it's not there
+    if not os.path.isfile(setup_dict["data_path"]):
+        data_file = os.getenv("DATA_DIR") + "/" + setup_dict["data_path"]
 
     # Read in data and run the gensim preprocessing on it
     trainer = TextTrainer()
