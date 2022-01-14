@@ -1,4 +1,4 @@
-import json, os
+import json, os, random
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 import argparse as ap
@@ -28,6 +28,11 @@ argparser.add_argument(
 argparser.add_argument(
     "--lock_yaxis",
     help="Set this flag to force the y-axis to be [0, 1]",
+    action="store_true",
+)
+argparser.add_argument(
+    "--shuffle_colors",
+    help="Randomly generate plot colors rather than use matplotlib's colors",
     action="store_true",
 )
 args = argparser.parse_args()
@@ -65,7 +70,16 @@ for filename, n_topics in zip(json_files, topic_nums):
         # Plot time vs coherence for each n_topics
         plt.xticks(rotation=args.label_rotation)
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
-        ax.plot(x_time, y_coherence, label=str(n_topics) + " Topics")
+        if args.shuffle_colors:
+            r = lambda: random.randint(0, 255)
+            ax.plot(
+                x_time,
+                y_coherence,
+                label=str(n_topics) + " Topics",
+                color="#%02X%02X%02X" % (r(), r(), r()),
+            )
+        else:
+            ax.plot(x_time, y_coherence, label=str(n_topics) + " Topics")
 
     # Since LdaSeq takes so long to train, it may serve to analyze before it finishes
     except FileNotFoundError:

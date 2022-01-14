@@ -1,5 +1,4 @@
-import os
-import json
+import os, json, random
 import argparse as ap
 from ogm.trainer import TextTrainer
 from gensim.models.coherencemodel import CoherenceModel
@@ -10,9 +9,7 @@ from labellines import labelLines
 def get_args():
     argparser = ap.ArgumentParser()
 
-    argparser.add_argument(
-        "n_topics", help="Number of topics to analyze results for", type=int
-    )
+    argparser.add_argument("n_topics", help="Number of topics to analyze results for", type=int)
     argparser.add_argument(
         "--experiment_config", help="Path to experiment's JSON file", required=True
     )
@@ -30,6 +27,11 @@ def get_args():
         "--plot_keywords_topic",
         help="Pass an int to show bar plots for keywords in a particular topic",
         type=int,
+    )
+    argparser.add_argument(
+        "--shuffle_colors",
+        help="Randomly generate plot colors for topic plot rather than use matplotlib's colors",
+        action="store_true",
     )
     argparser.add_argument(
         "--plot_keywords_frame",
@@ -74,9 +76,7 @@ def main(setup_dict, args):
     only_topic = args.print_only_topic
     experiment_name = setup_dict["name"]
 
-    main_path = (
-        os.getenv("MODEL_DIR") + "/" + experiment_name + "/" + str(n_topics) + "topics"
-    )
+    main_path = os.getenv("MODEL_DIR") + "/" + experiment_name + "/" + str(n_topics) + "topics"
 
     # Load metadata file
     with open(main_path + "/metadata.json", "r") as json_file:
@@ -101,9 +101,7 @@ def main(setup_dict, args):
         if only_topic is None:
             print("<details>")
             print("<summary> Click to expand time frame " + str(i) + " </summary>\n")
-            print(
-                "Average coherence for time frame:", info["time_" + str(i)]["coherence"]
-            )
+            print("Average coherence for time frame:", info["time_" + str(i)]["coherence"])
 
         cm = CoherenceModel.load(info["time_" + str(i)]["coherence_savepath"])
         topic_coherences = cm.get_coherence_per_topic()
@@ -140,9 +138,7 @@ def main(setup_dict, args):
 
                 plt.bar(x_axis, y_axis, color=args.bar_color)
                 plt.xticks(rotation=30)
-                plt.title(
-                    "Topic " + str(j) + " Word Probabilities, Time Frame " + str(i)
-                )
+                plt.title("Topic " + str(j) + " Word Probabilities, Time Frame " + str(i))
                 plt.show()
 
             individual_coherences[j][i] = topic_coherences[j]
@@ -156,7 +152,16 @@ def main(setup_dict, args):
     if args.show_plot:
         ticks = [i for i in range(len(time_frame_labels))]
         for i in range(n_topics):
-            plt.plot(ticks, individual_coherences[i], label="Topic " + str(i))
+            if args.shuffle_colors:
+                r = lambda: random.randint(0, 255)
+                plt.plot(
+                    ticks,
+                    individual_coherences[i],
+                    label="Topic " + str(i),
+                    color="#%02X%02X%02X" % (r(), r(), r()),
+                )
+            else:
+                plt.plot(ticks, individual_coherences[i], label="Topic " + str(i))
 
         plt.title(args.plot_title)
         plt.xlabel("Start of time frame")
