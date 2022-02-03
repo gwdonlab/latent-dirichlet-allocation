@@ -44,6 +44,11 @@ def get_args():
         default="#1f77b4",
     )
     argparser.add_argument(
+        "--lock_barplot_yaxis",
+        help="Set upper limit on bar plot's y-axis",
+        type=float,
+    )
+    argparser.add_argument(
         "--plot_title",
         help="Title for the individual topic coherence plot",
         default="Coherence Scores of Individual Topics",
@@ -137,6 +142,10 @@ def main(setup_dict, args):
                     y_axis.append(weight)
 
                 plt.bar(x_axis, y_axis, color=args.bar_color)
+
+                if args.lock_barplot_yaxis is not None:
+                    plt.ylim((0, args.lock_barplot_yaxis))
+
                 plt.xticks(rotation=30)
                 plt.title("Topic " + str(j) + " Word Probabilities, Time Frame " + str(i))
                 plt.show()
