@@ -1,4 +1,4 @@
-import os, json, random
+import os, json, random, csv
 import argparse as ap
 from ogm.trainer import TextTrainer
 from gensim.models.coherencemodel import CoherenceModel
@@ -67,6 +67,9 @@ def get_args():
         "--remove_from_label",
         nargs="*",
         help="List of strings to remove from x-axis plot labels",
+    )
+    argparser.add_argument(
+        "--write_axes", help="Write the axes of all plots to CSV files", action="store_true"
     )
     args = argparser.parse_args()
     with open(args.experiment_config, "r") as infile:
@@ -150,6 +153,13 @@ def main(setup_dict, args):
                 plt.title("Topic " + str(j) + " Word Probabilities, Time Frame " + str(i))
                 plt.show()
 
+                if args.write_axes:
+                    with open(
+                        "topic_" + str(j) + "_timeframe_" + str(i) + "_wordprobs.csv", "w"
+                    ) as outfile:
+                        writer = csv.writer(outfile)
+                        writer.writerows(zip(x_axis, y_axis))
+
             individual_coherences[j][i] = topic_coherences[j]
             j += 1
 
@@ -186,6 +196,11 @@ def main(setup_dict, args):
             plt.legend()
 
         plt.show()
+        if args.write_axes:
+            with open("coherences_plot.csv", "w") as outfile:
+                individual_coherences.insert(0, ticks)
+                writer = csv.writer(outfile)
+                writer.writerows(zip(*individual_coherences))
 
 
 if __name__ == "__main__":
