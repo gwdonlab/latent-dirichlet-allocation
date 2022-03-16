@@ -40,7 +40,8 @@ argparser.add_argument(
 argparser.add_argument(
     "--legend",
     required=False,
-    help="If set, adds a plot legend; the keys in this legend will be experiment names unless 'plot_name' is in the config file",
+    help="If set, adds a plot legend; the keys in this legend will be experiment names"
+    + "unless 'plot_name' is in the config file",
     dest="add_legend",
     action="store_true",
 )
@@ -48,6 +49,14 @@ argparser.add_argument(
     "--lock_yaxis",
     help="Set this flag to force the (2D plot) y-axis to be [0, 1]",
     action="store_true",
+)
+argparser.add_argument(
+    "--coherence_metric",
+    help="Which coherence score to use? Defaults to C_V. "
+    + "If choice is 'all', only the coherence metrics for the first experiment passed will be plotted.",
+    choices={"u_mass", "c_uci", "c_npmi", "all", "c_v"},
+    default=["c_v"],
+    nargs="+",
 )
 args = argparser.parse_args()
 
@@ -76,9 +85,7 @@ if args.plot_3d:
         # Read in all metadata files
         models_parent_dir = os.getenv("MODEL_DIR") + "/" + experiment_name
         topic_num_subdirs = os.listdir(models_parent_dir)
-        json_files = [
-            models_parent_dir + "/" + x + "/metadata.json" for x in topic_num_subdirs
-        ]
+        json_files = [models_parent_dir + "/" + x + "/metadata.json" for x in topic_num_subdirs]
 
         x_topics = []
         y_coherence = []
@@ -139,55 +146,91 @@ else:
         # Read in all metadata files
         models_parent_dir = os.getenv("MODEL_DIR") + "/" + experiment_name
         topic_num_subdirs = os.listdir(models_parent_dir)
-        json_files = [
-            models_parent_dir + "/" + x + "/metadata.json" for x in topic_num_subdirs
-        ]
+        json_files = [models_parent_dir + "/" + x + "/metadata.json" for x in topic_num_subdirs]
 
-        x_topics = []
-        y_coherence = []
-        y_err = []
+        # Process CLI args for requested coherence formula
+        coherence_metrics = {"u_mass": "_u_mass", "c_uci": "_c_uci", "c_npmi": "_c_npmi", "c_v": ""}
+        if "all" in args.coherence_metric:
+            to_find = set(coherence_metrics.keys())
+        else:
+            to_find = set(args.coherence_metric)
+
+        # Save axis ticks in dictionary maps
+        plot_x_axes = {m: [] for m in to_find}
+        plot_y_axes = {m: [] for m in to_find}
+        plot_y_errs = {m: [] for m in to_find}
 
         for filename in json_files:
             try:
                 with open(filename, "r") as json_file:
                     info = json.load(json_file)
-                    x_topics.append(info["aggregated"]["topics"])
-                    y_coherence.append(info["aggregated"]["avg_coherence"])
-                    y_err.append(info["aggregated"]["coherence_stdev"])
+                    for metric in to_find:
+                        plot_x_axes[metric].append(info["aggregated"]["topics"])
+                        plot_y_axes[metric].append(
+                            info["aggregated"]["avg_coherence" + coherence_metrics[metric]]
+                        )
+                        plot_y_errs[metric].append(
+                            info["aggregated"]["coherence_stdev" + coherence_metrics[metric]]
+                        )
+
             except FileNotFoundError:
                 print("Couldn't find " + filename)
 
-        temp = zip(x_topics, y_coherence, y_err)
-        res = sorted(temp, key=lambda x: x[0])
-        x_topics, y_coherence, y_err = zip(*res)
+        for metric in to_find:
+            # Pull the axis plots from the shared dictionary for this experiment
+            x_topics = plot_x_axes[metric]
+            y_coherence = plot_y_axes[metric]
+            y_err = plot_y_errs[metric]
+
+            # Sort by n_topics
+            temp = zip(x_topics, y_coherence, y_err)
+            res = sorted(temp, key=lambda x: x[0])
+            x_topics, y_coherence, y_err = zip(*res)
+
+            if args.no_errorbars:
+                if "plot_name" in expt_config and len(to_find) == 1:
+                    ax.plot(x_topics, y_coherence, label=expt_config["plot_name"])
+                elif "plot_name" in expt_config:
+                    ax.plot(
+                        x_topics,
+                        y_coherence,
+                        label=expt_config["plot_name"] + ", " + metric + " coherence",
+                    )
+                else:
+                    ax.plot(
+                        x_topics, y_coherence, label=experiment_name + ", " + metric + " coherence"
+                    )
+
+            else:
+                if "plot_name" in expt_config and len(to_find) == 1:
+                    ax.errorbar(x_topics, y_coherence, yerr=y_err, label=expt_config["plot_name"])
+                elif "plot_name" in expt_config:
+                    ax.errorbar(
+                        x_topics,
+                        y_coherence,
+                        yerr=y_err,
+                        label=expt_config["plot_name"] + ", " + metric + " coherence",
+                    )
+                else:
+                    ax.errorbar(
+                        x_topics,
+                        y_coherence,
+                        yerr=y_err,
+                        label=experiment_name + ", " + metric + " coherence",
+                    )
 
         # Plot topic_num vs coherence
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
 
-        if args.no_errorbars:
-            if "plot_name" in expt_config:
-                ax.plot(x_topics, y_coherence, label=expt_config["plot_name"])
-            else:
-                ax.plot(x_topics, y_coherence, label=experiment_name)
-
-        else:
-            if "plot_name" in expt_config:
-                ax.errorbar(
-                    x_topics, y_coherence, yerr=y_err, label=expt_config["plot_name"]
-                )
-            else:
-                ax.errorbar(x_topics, y_coherence, yerr=y_err, label=experiment_name)
+        # If more than one coherence metric is requested, only plot first experiment
+        if len(to_find) > 1:
+            break
 
     if args.plot_20news:
-        with open(
-            os.getenv("MODEL_DIR") + "/20Newsgroups/metadata.json", "r"
-        ) as baseline_info:
+        with open(os.getenv("MODEL_DIR") + "/20Newsgroups/metadata.json", "r") as baseline_info:
             baseline_dict = json.load(baseline_info)
-            baseline = [
-                baseline_dict["aggregated"]["avg_coherence"]
-                for i in range(len(x_topics))
-            ]
+            baseline = [baseline_dict["aggregated"]["avg_coherence"] for i in range(len(x_topics))]
 
         ax.plot(x_topics, baseline, "k--", label="20News baseline")
 
@@ -197,7 +240,7 @@ else:
 if args.plot_3d:
     ax.set_zlabel("Coherence score ($C_v$)")
 else:
-    ax.set_ylabel("Coherence score ($C_v$)")
+    ax.set_ylabel("Coherence score")
 
     if args.add_legend:
         ax.legend()
