@@ -16,6 +16,7 @@ LDA experiments require:
 
 ## Explore Results
 - `aggr_results.py`: Construct coherence plot for one or many experiment runs with LDA models.
+- `calculate_coherence.py`: Calculate alternate coherence scores than just [C_V](http://latex.codecogs.com/svg.latex?C_V)
 - `top_words.py`: Load the model with the best coherence score (given a specified number of topics and experiment `.json` file which generated the model) and output the probability distribution for words in its topics. Will also output a per-topic coherence score. This script also has some additional dependencies for optional features that are set to `False` by default.
     - To save an LDAvis HTML file for better visualization, you need the `pyLDAvis` package
     - To generate a word cloud, you need the `Pillow` and `wordcloud` packages.
