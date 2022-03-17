@@ -58,6 +58,12 @@ argparser.add_argument(
     default=["c_v"],
     nargs="+",
 )
+argparser.add_argument(
+    "--black_white",
+    help="Plots will appear with varying line styles instead of colors. "
+    + "NOTE: Only supports four different line styles",
+    action="store_true",
+)
 args = argparser.parse_args()
 
 # Preliminary error-checking
@@ -136,6 +142,7 @@ if args.plot_3d:
 
 else:
     ax = plt.figure().gca()
+    black_and_white_styles = ["-", "--", "-.", ":"]
 
     for experiment_path in args.experiment_configs:
         # Load experiment config file
@@ -187,39 +194,36 @@ else:
             res = sorted(temp, key=lambda x: x[0])
             x_topics, y_coherence, y_err = zip(*res)
 
-            if args.no_errorbars:
-                if "plot_name" in expt_config and len(to_find) == 1:
-                    ax.plot(x_topics, y_coherence, label=expt_config["plot_name"])
-                elif "plot_name" in expt_config:
-                    ax.plot(
-                        x_topics,
-                        y_coherence,
-                        label=expt_config["plot_name"] + ", " + metric + " coherence",
-                    )
-                else:
-                    ax.plot(
-                        x_topics, y_coherence, label=experiment_name + ", " + metric + " coherence"
-                    )
-
+            # Set plot parameters from CLI
+            if "plot_name" in expt_config and len(to_find) == 1:
+                plot_name = expt_config["plot_name"]
+            elif "plot_name" in expt_config:
+                plot_name = expt_config["plot_name"] + ", " + metric + " coherence"
             else:
-                if "plot_name" in expt_config and len(to_find) == 1:
-                    ax.errorbar(x_topics, y_coherence, yerr=y_err, label=expt_config["plot_name"])
-                elif "plot_name" in expt_config:
-                    ax.errorbar(
-                        x_topics,
-                        y_coherence,
-                        yerr=y_err,
-                        label=expt_config["plot_name"] + ", " + metric + " coherence",
-                    )
-                else:
-                    ax.errorbar(
-                        x_topics,
-                        y_coherence,
-                        yerr=y_err,
-                        label=experiment_name + ", " + metric + " coherence",
-                    )
+                plot_name = experiment_name + ", " + metric + " coherence"
+            if args.black_white:
+                line_color = "k"
+                line_style = black_and_white_styles.pop()
+            else:
+                line_color = None
+                line_style = "-"
 
-        # Plot topic_num vs coherence
+            # Make plot
+            if args.no_errorbars:
+                ax.plot(
+                    x_topics, y_coherence, label=plot_name, color=line_color, linestyle=line_style
+                )
+            else:
+                ax.errorbar(
+                    x_topics,
+                    y_coherence,
+                    yerr=y_err,
+                    label=plot_name,
+                    color=line_color,
+                    linestyle=line_style,
+                )
+
+        # Adjust axis tick marks
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
 
@@ -232,7 +236,7 @@ else:
             baseline_dict = json.load(baseline_info)
             baseline = [baseline_dict["aggregated"]["avg_coherence"] for i in range(len(x_topics))]
 
-        ax.plot(x_topics, baseline, "k--", label="20News baseline")
+        ax.plot(x_topics, baseline, "b--", label="20News baseline")
 
     if args.lock_yaxis:
         plt.ylim(ymax=1, ymin=0)
