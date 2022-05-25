@@ -32,11 +32,11 @@ args = argparser.parse_args()
 parser = TextParser()
 parser.parse_file(args.datafile_name)
 a = parser.plot_data_quantities(
-    args.date_key,
-    args.date_format,
-    args.bucket_size,
-    args.start_date,
-    args.end_date,
+    key=args.date_key,
+    data_format=args.date_format,
+    days_interval=args.bucket_size,
+    start_date=args.start_date,
+    end_date=args.end_date,
     plot_title=args.plot_title,
     show_plot=False,
 )
