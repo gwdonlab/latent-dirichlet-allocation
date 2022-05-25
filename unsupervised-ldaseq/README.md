@@ -62,7 +62,8 @@ Run `ldaseq.py` with a path to a `.json` file structured as follows. All entries
         "strings",
         "to",
         "remove"
-    ]
+    ],
+    "passes": "int indicating how many passes to use in the initial LDA model"
 }
 ```
 

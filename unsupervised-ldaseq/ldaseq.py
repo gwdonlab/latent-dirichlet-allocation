@@ -82,6 +82,10 @@ def main(setup_dict):
     topic_quants = range(setup_dict["min_topics"], setup_dict["max_topics"] + 1)
     text_key = setup_dict["text_key"]
     experiment_name = setup_dict["name"]
+    if "passes" in setup_dict:
+        passes = setup_dict["passes"]
+    else:
+        passes = 10
 
     print("Training models for topic_nums:", topic_quants)
 
@@ -107,6 +111,7 @@ def main(setup_dict):
             n_topics=num_topics,
             output_path=model_savepath + "/ldaseq.model",
             seq_counts=quants,
+            passes=passes
         )
 
         # Loop through the different time slices and get coherence at each one
