@@ -38,39 +38,25 @@ def main(setup_dict):
 
     if "attribute_filters" in setup_dict:
         for attr_filter in setup_dict["attribute_filters"]:
-            trainer.filter_data(
-                attr_filter["filter_key"], set(attr_filter["filter_vals"])
-            )
+            trainer.filter_data(attr_filter["filter_key"], set(attr_filter["filter_vals"]))
 
     print("Found " + str(len(trainer.data)) + " posts")
 
     if "replace_before_stemming" in setup_dict:
-        trainer.replace_words(
-            setup_dict["text_key"], setup_dict["replace_before_stemming"]
-        )
+        trainer.replace_words(setup_dict["text_key"], setup_dict["replace_before_stemming"])
 
     if "remove_before_stemming" in setup_dict:
-        a = trainer.remove_words(
-            setup_dict["text_key"], set(setup_dict["remove_before_stemming"])
-        )
-        print(
-            "Removed " + str(a) + " instances of", setup_dict["remove_before_stemming"]
-        )
+        a = trainer.remove_words(setup_dict["text_key"], set(setup_dict["remove_before_stemming"]))
+        print("Removed " + str(a) + " instances of", setup_dict["remove_before_stemming"])
 
     trainer.lemmatize_stem_words(setup_dict["text_key"])
 
     if "replace_after_stemming" in setup_dict:
-        trainer.replace_words(
-            setup_dict["text_key"], setup_dict["replace_after_stemming"]
-        )
+        trainer.replace_words(setup_dict["text_key"], setup_dict["replace_after_stemming"])
 
     if "remove_after_stemming" in setup_dict:
-        a = trainer.remove_words(
-            setup_dict["text_key"], set(setup_dict["remove_after_stemming"])
-        )
-        print(
-            "Removed " + str(a) + " instances of", setup_dict["remove_after_stemming"]
-        )
+        a = trainer.remove_words(setup_dict["text_key"], set(setup_dict["remove_after_stemming"]))
+        print("Removed " + str(a) + " instances of", setup_dict["remove_after_stemming"])
 
     topic_quants = range(setup_dict["min_topics"], setup_dict["max_topics"] + 1)
     text_key = setup_dict["text_key"]
@@ -97,6 +83,18 @@ def main(setup_dict):
             )
             os.makedirs(model_savepath, exist_ok=True)
 
+            # Check whether to save LDA model to disk
+            if "lda_nosave" in setup_dict and setup_dict["lda_nosave"]:
+                lda_savepath = None
+            else:
+                lda_savepath = model_savepath + "/lda.model"
+
+            # Check whether to save coherence model to disk
+            if "coherence_nosave" in setup_dict and setup_dict["coherence_nosave"]:
+                c_savepath = None
+            else:
+                c_savepath = model_savepath + "/coherence.model"
+
             # Train a parallelized LDA model
             # ALPHA: has to do with the expected number of topics per document;
             # can be set to a `num_topics` length array representing each topic's probability,
@@ -107,7 +105,7 @@ def main(setup_dict):
             trainer.train_lda(
                 key=text_key,
                 n_topics=num_topics,
-                output_path=model_savepath + "/lda.model",
+                output_path=lda_savepath,
                 n_workers=8,
             )
 
@@ -138,7 +136,8 @@ def main(setup_dict):
             }
 
             # Save coherence model
-            cm.save(model_savepath + "/coherence.model")
+            if c_savepath:
+                cm.save(c_savepath)
 
             print(
                 "["

@@ -69,7 +69,9 @@ Run `lda.py` with a path to a `.json` file structured as follows. All entries af
         "to",
         "remove"
     ],
-    "plot_name": "human-readable experiment name to put in a plot legend"
+    "plot_name": "human-readable experiment name to put in a plot legend",
+    "lda_nosave": "boolean; if true, will suppress saving of LDA models",
+    "coherence_nosave": "boolean; if true, will suppress saving of coherence models"
 }
 ```
 
