@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from ogm.parser import TextParser
-import os
 import argparse as ap
 
 # Get paramters via CLI
