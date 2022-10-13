@@ -12,7 +12,6 @@ LDA experiments require:
 
 ## Run Experiments
 - `lda.py`: Batch-generate LDA models on a given corpus. Will output models into the directory structure described below. Requires a path to an experiment setup `.json` file. See below for the structure of this file.
-- `generate_20news_baseline.py`: Train 10 LDA models with 20 topics over the 20 Newsgroups dataset included with Scikit. This should be a decent baseline for coherence scores.
 
 ## Explore Results
 - `aggr_results.py`: Construct coherence plot for one or many experiment runs with LDA models.

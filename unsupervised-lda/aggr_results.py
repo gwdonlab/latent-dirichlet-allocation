@@ -17,13 +17,6 @@ argparser.add_argument(
     "--y_title", default="Experiment Names", help="Title for the y-axis in a 3D plot"
 )
 argparser.add_argument(
-    "--plot_20news",
-    required=False,
-    dest="plot_20news",
-    help="If set, will add a coherence line for the 20 Newsgroups test dataset",
-    action="store_true",
-)
-argparser.add_argument(
     "--plot_3d",
     required=False,
     help="If set, will attempt to generate a 3D plot of coherence, experiments, and number of topics",
@@ -67,9 +60,6 @@ argparser.add_argument(
 args = argparser.parse_args()
 
 # Preliminary error-checking
-if args.plot_3d and args.plot_20news:
-    print("Plotting 20 News as a 3D plot is currently unsupported")
-    args.plot_20news = False
 if args.plot_3d:
     y_axis_labels = [x[:3] + "..." + x[-3:] for x in args.experiment_names]
 
@@ -230,13 +220,6 @@ else:
         # If more than one coherence metric is requested, only plot first experiment
         if len(to_find) > 1:
             break
-
-    if args.plot_20news:
-        with open(os.getenv("MODEL_DIR") + "/20Newsgroups/metadata.json", "r") as baseline_info:
-            baseline_dict = json.load(baseline_info)
-            baseline = [baseline_dict["aggregated"]["avg_coherence"] for i in range(len(x_topics))]
-
-        ax.plot(x_topics, baseline, "b--", label="20News baseline")
 
     if args.lock_yaxis:
         plt.ylim(ymax=1, ymin=0)
