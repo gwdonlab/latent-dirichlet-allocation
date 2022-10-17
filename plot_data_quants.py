@@ -1,15 +1,11 @@
 import matplotlib.pyplot as plt
+from ogm.utils import plot_data_quantities
 from ogm.parser import TextParser
 import argparse as ap
 
 # Get paramters via CLI
 argparser = ap.ArgumentParser()
 argparser.add_argument("datafile_name", help="Path to data table")
-argparser.add_argument(
-    "--date_format",
-    help="Python datetime code to parse dates in the data",
-    default="%Y-%m-%dT%H:%M:%SZ",
-)
 argparser.add_argument(
     "--date_key", required=True, help="Heading which contains timestamps in data"
 )
@@ -30,9 +26,9 @@ args = argparser.parse_args()
 # Generate plot
 parser = TextParser()
 parser.parse_file(args.datafile_name)
-a = parser.plot_data_quantities(
-    key=args.date_key,
-    data_format=args.date_format,
+plot_data_quantities(
+    parser.data,
+    col=args.date_key,
     days_interval=args.bucket_size,
     start_date=args.start_date,
     end_date=args.end_date,

@@ -5,6 +5,8 @@ Scripts to run experiments with LDA models. Run any script with the `-h` flag to
 python <SCRIPT> -h
 ```
 
+**Note!** Because of the time series processing involved, training a Sequential LDA model will add a temporary column; to avoid collisions, ensure your data _doesn't_ have a column named "__ts".
+
 ## Environment
 Experiments require:
 - `$DATA_DIR` environment variable pointing to a folder containing dataset files

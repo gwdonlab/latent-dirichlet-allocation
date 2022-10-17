@@ -29,18 +29,18 @@ def main(setup_dict):
 
     if "time_filter" in setup_dict:
         trainer.filter_within_time_range(
-            setup_dict["time_filter"]["time_key"],
-            setup_dict["time_filter"]["data_format"],
-            setup_dict["time_filter"]["arg_format"],
-            setup_dict["time_filter"]["start"],
-            setup_dict["time_filter"]["end"],
+            col=setup_dict["time_filter"]["time_key"],
+            data_format=setup_dict["time_filter"]["data_format"],
+            input_format=setup_dict["time_filter"]["arg_format"],
+            start=setup_dict["time_filter"]["start"],
+            end=setup_dict["time_filter"]["end"],
         )
 
     if "attribute_filters" in setup_dict:
         for attr_filter in setup_dict["attribute_filters"]:
             trainer.filter_data(attr_filter["filter_key"], set(attr_filter["filter_vals"]))
 
-    print("Found " + str(len(trainer.data)) + " posts")
+    print("Found " + str(trainer.data.shape[0]) + " posts")
 
     if "replace_before_stemming" in setup_dict:
         trainer.replace_words(setup_dict["text_key"], setup_dict["replace_before_stemming"])
@@ -103,10 +103,7 @@ def main(setup_dict):
             # high beta means each topic has a mixture of most words,
             # low beta means each topic has a mixture of just a few of the words
             trainer.train_lda(
-                key=text_key,
-                n_topics=num_topics,
-                output_path=lda_savepath,
-                n_workers=8,
+                col=text_key, n_topics=num_topics, output_path=lda_savepath, n_workers=8
             )
 
             print(

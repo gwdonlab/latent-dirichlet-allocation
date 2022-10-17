@@ -26,11 +26,11 @@ def main(setup_dict):
 
     if "time_filter" in setup_dict:
         trainer.filter_within_time_range(
-            setup_dict["time_filter"]["time_key"],
-            setup_dict["time_filter"]["data_format"],
-            setup_dict["time_filter"]["arg_format"],
-            setup_dict["time_filter"]["start"],
-            setup_dict["time_filter"]["end"],
+            col=setup_dict["time_filter"]["time_key"],
+            data_format=setup_dict["time_filter"]["data_format"],
+            input_format=setup_dict["time_filter"]["arg_format"],
+            start=setup_dict["time_filter"]["start"],
+            end=setup_dict["time_filter"]["end"],
         )
 
     if "attribute_filters" in setup_dict:

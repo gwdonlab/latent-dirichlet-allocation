@@ -36,28 +36,12 @@ def main(args):
         )
     else:
         time_to_end = datetime.datetime.now()
-    if "data_format" in setup_dict["time_filter"]:
-        buckets, quants = trainer.plot_data_quantities(
-            key=setup_dict["time_filter"]["time_key"],
-            data_format=setup_dict["time_filter"]["data_format"],
-            days_interval=setup_dict["days_in_interval"],
-            start_date=time_to_begin.strftime(setup_dict["time_filter"]["data_format"]),
-            end_date=time_to_end.strftime(setup_dict["time_filter"]["data_format"]),
-            show_plot=False,
-        )
-    else:
-        trainer.add_datetime_attribute(setup_dict["time_filter"]["time_key"], "__added_datetime")
-        buckets, quants = trainer.plot_data_quantities(
-            key=setup_dict["time_filter"]["time_key"],
-            days_interval=setup_dict["days_in_interval"],
-            start_date=time_to_begin.strftime(setup_dict["time_filter"]["arg_format"]),
-            end_date=time_to_end.strftime(setup_dict["time_filter"]["arg_format"]),
-            data_format=setup_dict["time_filter"]["arg_format"],
-            show_plot=False,
-        )
 
-    # Sum of bucket quantities had better match the size of the dataset
-    assert sum(quants) == len(trainer.data)
+    trainer.filter_within_time_range(
+        col=setup_dict["time_filter"]["time_key"],
+        start=time_to_begin.strftime("%Y-%m-%d %H:%M:%S"),
+        end=time_to_end.strftime("%Y-%m-%d %H:%M:%S"),
+    )
 
     # Load saved model
     model_savepath = (
@@ -71,7 +55,7 @@ def main(args):
     trainer.load_model("ldaseq", model_savepath)
 
     # Model's gamma list had also better match the size of the dataset
-    assert len(trainer.data) == len(trainer.model.gammas)
+    assert trainer.data.shape[0] == len(trainer.model.gammas)
 
     # Get topic distribution for each doc
     output_array = [

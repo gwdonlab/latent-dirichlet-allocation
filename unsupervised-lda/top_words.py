@@ -1,5 +1,4 @@
 import os, json, pickle
-from gensim.corpora import dictionary
 from ogm.trainer import TextTrainer
 from gensim.models import CoherenceModel
 import argparse as ap
@@ -12,9 +11,7 @@ argparser.add_argument(
     type=int,
     required=True,
 )
-argparser.add_argument(
-    "--experiment_config", help="Path to experiment JSON file", required=True
-)
+argparser.add_argument("--experiment_config", help="Path to experiment JSON file", required=True)
 argparser.add_argument(
     "--model_num",
     help="Specific model to get keywords from; if not specified, will find the highest-coherence model",
@@ -171,40 +168,30 @@ def main():
         trainer.parse_file(data_path)
         if "time_filter" in setup_dict:
             trainer.filter_within_time_range(
-                setup_dict["time_filter"]["time_key"],
-                setup_dict["time_filter"]["data_format"],
-                setup_dict["time_filter"]["arg_format"],
-                setup_dict["time_filter"]["start"],
-                setup_dict["time_filter"]["end"],
+                col=setup_dict["time_filter"]["time_key"],
+                data_format=setup_dict["time_filter"]["data_format"],
+                input_format=setup_dict["time_filter"]["arg_format"],
+                start=setup_dict["time_filter"]["start"],
+                end=setup_dict["time_filter"]["end"],
             )
 
         if "attribute_filters" in setup_dict:
             for attr_filter in setup_dict["attribute_filters"]:
-                trainer.filter_data(
-                    attr_filter["filter_key"], set(attr_filter["filter_vals"])
-                )
+                trainer.filter_data(attr_filter["filter_key"], set(attr_filter["filter_vals"]))
 
         if "replace_before_stemming" in setup_dict:
-            trainer.replace_words(
-                setup_dict["text_key"], setup_dict["replace_before_stemming"]
-            )
+            trainer.replace_words(setup_dict["text_key"], setup_dict["replace_before_stemming"])
 
         if "remove_before_stemming" in setup_dict:
-            trainer.remove_words(
-                setup_dict["text_key"], set(setup_dict["remove_before_stemming"])
-            )
+            trainer.remove_words(setup_dict["text_key"], set(setup_dict["remove_before_stemming"]))
 
         trainer.lemmatize_stem_words(setup_dict["text_key"])
 
         if "replace_after_stemming" in setup_dict:
-            trainer.replace_words(
-                setup_dict["text_key"], setup_dict["replace_after_stemming"]
-            )
+            trainer.replace_words(setup_dict["text_key"], setup_dict["replace_after_stemming"])
 
         if "remove_after_stemming" in setup_dict:
-            trainer.remove_words(
-                setup_dict["text_key"], set(setup_dict["remove_after_stemming"])
-            )
+            trainer.remove_words(setup_dict["text_key"], set(setup_dict["remove_after_stemming"]))
 
         trainer.make_dict_and_corpus(setup_dict["text_key"])
         data = prepare(trainer.model, trainer.corpus, trainer.dictionary)
