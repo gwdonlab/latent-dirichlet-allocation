@@ -1,5 +1,5 @@
-# Topic Modeling
-Code for running robust and repeatable unsupervised topic modeling experiments. Use the `-h` flag to view CLI parameters for any script.
+# Latent Dirichlet Allocation
+Code for running robust and repeatable LDA experiments. Use the `-h` flag to view CLI parameters for any script.
 
 ## Files and Folders
 - [**lda**](./lda): Files related to the training and analysis of LDA topic models
