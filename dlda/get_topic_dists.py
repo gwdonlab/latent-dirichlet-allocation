@@ -1,4 +1,5 @@
-import os, json, datetime, csv
+import os, json
+import pandas as pd
 import argparse as ap
 from ogm.trainer import TextTrainer
 from ogm.utils import text_data_preprocess
@@ -11,7 +12,7 @@ def get_setup_dict():
         "n_topics", help="Number of topics to identify saved Sequential LDA model", type=int
     )
     parser.add_argument("data_id", help="Column of dataset containing a unique ID value")
-    parser.add_argument("--output_file", help="Name of CSV output file", default="output.csv")
+    parser.add_argument("--output_file", help="Name of Excel output file", default="output.xlsx")
     return parser.parse_args()
 
 
@@ -26,21 +27,19 @@ def main(args):
     trainer = TextTrainer()
     trainer.data = preprocessed_data
     if "time_filter" not in setup_dict:
-        raise ValueError("A time filter is required for training a sequential LDA")
-    time_to_begin = datetime.datetime.strptime(
-        setup_dict["time_filter"]["start"], setup_dict["time_filter"]["arg_format"]
+        raise ValueError("A time filter is required for running a sequential LDA")
+    time_to_begin = pd.Timestamp(setup_dict["time_filter"]["start"])
+    time_to_end = (
+        pd.Timestamp(setup_dict["time_filter"]["end"])
+        if "end" in setup_dict["time_filter"]
+        else pd.Timestamp.now()
     )
-    if "end" in setup_dict["time_filter"]:
-        time_to_end = datetime.datetime.strptime(
-            setup_dict["time_filter"]["end"], setup_dict["time_filter"]["arg_format"]
-        )
-    else:
-        time_to_end = datetime.datetime.now()
 
     trainer.filter_within_time_range(
         col=setup_dict["time_filter"]["time_key"],
         start=time_to_begin.strftime("%Y-%m-%d %H:%M:%S"),
         end=time_to_end.strftime("%Y-%m-%d %H:%M:%S"),
+        input_format="%Y-%m-%d %H:%M:%S",
     )
 
     # Load saved model
@@ -58,9 +57,7 @@ def main(args):
     assert trainer.data.shape[0] == len(trainer.model.gammas)
 
     # Get topic distribution for each doc
-    output_array = [
-        [args.data_id] + ["topic_" + str(i) for i, _ in enumerate(trainer.model.doc_topics(0))]
-    ]
+    output_array = []
     for doc_index in range(len(trainer.data)):
         doc_id = trainer[doc_index][args.data_id]
         topic_dist = trainer.model.doc_topics(doc_index)
@@ -69,9 +66,11 @@ def main(args):
         output_array.append(topic_dist)
 
     # Write distributions
-    with open(args.output_file, "w", newline="") as outfile:
-        writer = csv.writer(outfile)
-        writer.writerows(output_array)
+    pd.DataFrame(
+        output_array,
+        columns=[args.data_id]
+        + ["topic_" + str(i) for i, _ in enumerate(trainer.model.doc_topics(0))],
+    ).to_excel(args.output_file, index=False)
 
 
 if __name__ == "__main__":
