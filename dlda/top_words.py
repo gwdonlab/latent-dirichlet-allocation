@@ -197,7 +197,7 @@ def main(setup_dict, args):
 
         plt.show()
         if args.write_axes:
-            with open("coherences_plot.csv", "w") as outfile:
+            with open("coherences_plot.csv", "w", newline="") as outfile:
                 individual_coherences.insert(0, ticks)
                 writer = csv.writer(outfile)
                 writer.writerows(zip(*individual_coherences))
